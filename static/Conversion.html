@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Prueba de Conversión de Moneda</title>
+</head>
+<body>
+  <h1>Conversión de Moneda</h1>
+
+  <label for="monto">Monto:</label>
+  <input type="number" id="monto" value="1000" />
+
+  <label for="moneda_origen">Moneda Origen:</label>
+  <input type="text" id="moneda_origen" value="CLP" />
+
+  <label for="moneda_destino">Moneda Destino:</label>
+  <input type="text" id="moneda_destino" value="USD" />
+
+  <button onclick="convertirMoneda()">Convertir</button>
+
+  <p id="resultado"></p>
+
+<script>
+async function convertirMoneda() {
+    const from = document.getElementById("moneda_origen").value;
+    const to = document.getElementById("moneda_destino").value;
+    const amount = parseFloat(document.getElementById("monto").value);
+
+    try {
+        const res = await fetch(`http://127.0.0.1:8000/api/convertir?from_currency=${from}&to_currency=${to}&amount=${amount}`);
+        if (!res.ok) throw new Error(`Error en la respuesta de la API: ${res.status}`);
+
+        const data = await res.json();
+
+        document.getElementById("resultado").innerText = `${amount} ${from} = ${data.converted_amount} ${to} (Tipo de cambio: ${data.exchange_rate})`;
+    } catch (error) {
+        document.getElementById("resultado").innerText = error.message;
+    }
+}
+
+</script>
+
+</body>
+</html>

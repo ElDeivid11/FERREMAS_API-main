@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contacto - Ferremas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-primary: #ffc107; /* Amarillo */
+            --color-secondary: #a31e28; /* Rojo Oscuro */
+            --color-dark: #1a1a1a; /* Negro Suave */
+            --color-light: #ffffff;
+            --color-text: #333;
+        }
+        body { font-family: 'Poppins', sans-serif; margin: 0; background-color: #f9f9f9; color: var(--color-text); }
+        header { background-color: var(--color-dark); padding: 15px 0; text-align: center; border-bottom: 5px solid var(--color-primary); }
+        header img.logo { max-height: 60px; }
+        nav { background-color: var(--color-secondary); }
+        nav .container { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; }
+        nav a { color: white; text-decoration: none; padding: 15px 25px; display: inline-block; font-weight: 600; transition: background-color 0.3s; }
+        nav a:hover { background-color: var(--color-primary); color: var(--color-dark); }
+        .currency-selector-wrapper { margin-left: auto; padding-right: 20px; }
+        #currency-selector { background-color: transparent; color: white; border: 1px solid var(--color-primary); border-radius: 5px; padding: 8px; font-weight: 600; font-family: 'Poppins', sans-serif; }
+        .container { max-width: 800px; margin: 2rem auto; padding: 2rem; }
+        .contact-card { animation: fadeIn 0.5s ease-out forwards; background-color: var(--color-light); border: 1px solid #eee; padding: 2.5rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        h2 { text-align: center; font-size: 2.8rem; margin-bottom: 1rem; font-weight: 800; color: var(--color-dark); }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
+        .form-group input, .form-group textarea { width: 100%; padding: 15px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; transition: border-color 0.3s, box-shadow 0.3s; font-family: 'Poppins', sans-serif; font-size: 1rem; }
+        .form-group input:focus, .form-group textarea:focus { border-color: var(--color-primary); box-shadow: 0 0 8px rgba(255, 193, 7, 0.5); outline: none; }
+        #contact-form button { background-color: var(--color-primary); color: var(--color-dark); border: none; width: 100%; padding: 1rem; font-size: 1.1rem; font-weight: bold; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
+        #contact-form button:hover { background-color: #e0a800; transform: translateY(-2px); }
+        #contact-form button:disabled { background-color: #ccc; cursor: not-allowed; transform: translateY(0); }
+        footer { background-color: var(--color-dark); color: white; text-align: center; padding: 2.5rem 1rem; margin-top: 3rem; }
+        /* Estilos para notificaciones Toast */
+        .toast { position: fixed; bottom: 20px; right: 20px; background-color: var(--color-dark); color: white; padding: 15px 20px; border-radius: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 1000; opacity: 0; transition: opacity 0.5s, transform 0.5s; transform: translateY(20px); font-weight: 600;}
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.success { background-color: #198754; } /* Verde para éxito */
+        .toast.error { background-color: var(--color-secondary); }
+    </style>
+</head>
+<body>
+    <header>
+    </header>
+    <nav>
+        <div class="container">
+            <a href="tienda.html">Inicio</a>
+            <a href="Contacto.html">Contacto</a>
+            <div class="currency-selector-wrapper">
+                <select id="currency-selector">
+                    <option value="CLP">CLP 🇨🇱</option>
+                    <option value="USD">USD 🇺🇸</option>
+                    <option value="EUR">EUR 🇪🇺</option>
+                </select>
+            </div>
+        </div>
+    </nav>
+    <main class="container">
+        <div class="contact-card">
+            <h2>Contacto</h2>
+            <form id="contact-form">
+                <div class="form-group"><label for="nombre">Nombre</label><input type="text" id="nombre" required></div>
+                <div class="form-group"><label for="correo">Correo</label><input type="email" id="correo" required></div>
+                <div class="form-group"><label for="asunto">Asunto</label><input type="text" id="asunto" required></div>
+                <div class="form-group"><label for="mensaje">Mensaje</label><textarea id="mensaje" rows="5" required></textarea></div>
+                <button type="submit" id="submit-button">Enviar Mensaje</button>
+            </form>
+        </div>
+    </main>
+    <footer>
+        <p>&copy; 2025 Ferremas. Todos los derechos reservados.</p>
+    </footer>
+
+    <script>
+        function showNotification(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.classList.add('show'); }, 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => { document.body.removeChild(toast); }, 500);
+            }, 3000);
+        }
+
+        document.getElementById('contact-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const submitButton = document.getElementById('submit-button');
+            submitButton.disabled = true;
+            submitButton.textContent = 'Enviando...';
+
+            const data = {
+                nombre: document.getElementById('nombre').value,
+                correo: document.getElementById('correo').value,
+                asunto: document.getElementById('asunto').value,
+                mensaje: document.getElementById('mensaje').value,
+            };
+
+            fetch('http://localhost:8000/contacto', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (response.ok) return response.json();
+                throw new Error('Error en el servidor.');
+            })
+            .then(result => {
+                showNotification('Mensaje enviado con éxito.', 'success');
+                document.getElementById('contact-form').reset();
+            })
+            .catch(error => {
+                showNotification('Error al enviar el mensaje.', 'error');
+            })
+            .finally(() => {
+                submitButton.disabled = false;
+                submitButton.textContent = 'Enviar Mensaje';
+            });
+        });
+
+        // Sincronizar el selector de moneda aunque no se use aquí
+        document.addEventListener('DOMContentLoaded', () => {
+            const currencySelector = document.getElementById('currency-selector');
+            currencySelector.value = localStorage.getItem('currency') || 'CLP';
+            currencySelector.addEventListener('change', (event) => {
+                localStorage.setItem('currency', event.target.value);
+            });
+        });
+    </script>
+</body>
+</html>
