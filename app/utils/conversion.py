@@ -1,30 +1,38 @@
+# En app/utils/conversion.py
+
 import requests
 from fastapi import HTTPException
 
 def convertir_moneda(from_currency: str, to_currency: str, amount: float):
-    url = f"https://open.er-api.com/v6/latest/{from_currency}"
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-        data = response.json()
-
-        # Validar 'result' solo si existe
-        if "result" in data and data["result"] != "success":
-            raise HTTPException(status_code=500, detail="Error en la respuesta de la API de tipo de cambio")
-
-        rates = data.get("rates", {})
-        if to_currency not in rates:
-            raise HTTPException(status_code=400, detail=f"Moneda destino '{to_currency}' no encontrada")
-
-        tipo_cambio = float(rates[to_currency])
-        resultado = amount * tipo_cambio
+    # --- LÓGICA AÑADIDA ---
+    # Si las monedas son iguales, no es necesario hacer la conversión.
+    if from_currency == to_currency:
         return {
-            "converted_amount": round(resultado, 4),  # redondea
-            "exchange_rate": tipo_cambio,
-            "from_currency": from_currency,
-            "to_currency": to_currency,
+            "converted_amount": amount,
+            "exchange_rate": 1.0,
             "original_amount": amount
         }
+    # -------------------------
 
-    except requests.RequestException as e:
-        raise HTTPException(status_code=500, detail=f"Error al obtener tipo de cambio: {e}")
+    url = f"https://open.er-api.com/v6/latest/{from_currency}"
+    response = requests.get(url)
+
+    if response.status_code != 200:
+        raise HTTPException(status_code=500, detail="Error al contactar el servicio de conversión de moneda")
+    
+    data = response.json()
+    if data.get("result") == "error":
+        raise HTTPException(status_code=400, detail=data.get("error-type", "Error desconocido de la API de moneda"))
+
+    rates = data.get("rates", {})
+    if to_currency not in rates:
+        raise HTTPException(status_code=400, detail=f"Moneda destino '{to_currency}' no encontrada")
+    
+    exchange_rate = rates[to_currency]
+    converted_amount = round(amount * exchange_rate, 2)
+    
+    return {
+        "converted_amount": converted_amount,
+        "exchange_rate": exchange_rate,
+        "original_amount": amount
+    }
