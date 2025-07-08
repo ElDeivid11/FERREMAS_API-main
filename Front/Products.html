@@ -20,7 +20,34 @@
             border-radius: 8px;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
-        h1, h2 {
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .header-container h1 {
+            color: #1d4ed8;
+            margin: 0;
+            border: none;
+            padding: 0;
+        }
+        .preview-button {
+            background-color: #10b981;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .preview-button:hover {
+            background-color: #059669;
+        }
+        h2 {
             color: #1d4ed8;
             border-bottom: 2px solid #e5e7eb;
             padding-bottom: 10px;
@@ -46,11 +73,7 @@
             color: white;
             border: none;
             cursor: pointer;
-            transition: background-color 0.3s;
-            grid-column: 1 / -1; /* Ocupa todo el ancho */
-        }
-        #product-form button:hover {
-            background-color: #1e40af;
+            grid-column: 1 / -1;
         }
         .product-table {
             width: 100%;
@@ -83,14 +106,94 @@
         }
         .btn-edit { background-color: #f59e0b; }
         .btn-delete { background-color: #ef4444; }
+        
+        /* Estilos para la ventana flotante (Modal) */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            height: 90%;
+            max-width: 1400px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        .modal-close-button {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .modal-body {
+            flex-grow: 1;
+            overflow: auto;
+        }
+        .modal-body iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
     </style>
 </head>
 <body>
+
+    <script>
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+            window.location.href = '/login.html';
+        }
+    </script>
+
+    <div id="preview-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Vista Previa de la Tienda</h3>
+                <button id="close-modal-button" class="modal-close-button">Cerrar</button>
+            </div>
+            <div class="modal-body">
+                <iframe id="preview-iframe" src="tienda.html" title="Vista Previa de la Tienda"></iframe>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
-        <h1>Gestión de Productos</h1>
+        <div class="header-container">
+            <h1>Gestión de Productos</h1>
+            <button id="open-preview-button" class="preview-button">👁️ Ver Tienda</button>
+        </div>
 
         <form id="product-form" enctype="multipart/form-data">
             <input type="hidden" id="codigo-original">
+            <input type="hidden" id="imagen-url-original">
+            
             <input type="text" id="codigo" placeholder="Código" required>
             <input type="text" id="marca" placeholder="Marca" required>
             <input type="text" id="nombre" placeholder="Nombre" required>
@@ -98,7 +201,7 @@
             <input type="number" id="stock" placeholder="Stock" required>
             <input type="number" id="precio" placeholder="Precio" required>
             <div>
-                <label for="imagen" style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: #555;">Imagen del producto</label>
+                <label for="imagen" style="display: block; margin-bottom: 5px; font-size: 0.9rem; color: #555;">Imagen del producto (opcional al editar)</label>
                 <input type="file" id="imagen" name="file" accept="image/*">
             </div>
             <button type="submit">Guardar Producto</button>
@@ -118,18 +221,48 @@
                         <th>Acciones</th>
                     </tr>
                 </thead>
-                <tbody id="product-list">
-                    </tbody>
+                <tbody id="product-list"></tbody>
             </table>
         </div>
     </div>
 
     <script>
-        const apiUrl = 'http://localhost:8000/productos';
+        const apiUrl = 'http://127.0.0.1:8000/productos';
+        const accessToken = localStorage.getItem('accessToken');
 
+        // Lógica para controlar la ventana flotante
+        const openModalButton = document.getElementById('open-preview-button');
+        const closeModalButton = document.getElementById('close-modal-button');
+        const modalOverlay = document.getElementById('preview-modal');
+        const previewIframe = document.getElementById('preview-iframe');
+
+        openModalButton.addEventListener('click', () => {
+            previewIframe.src = previewIframe.src; // Recarga el iframe para ver cambios
+            modalOverlay.style.display = 'flex';
+        });
+
+        closeModalButton.addEventListener('click', () => {
+            modalOverlay.style.display = 'none';
+        });
+
+        modalOverlay.addEventListener('click', (event) => {
+            if (event.target === modalOverlay) {
+                modalOverlay.style.display = 'none';
+            }
+        });
+
+        // Lógica para la gestión de productos
         function mostrarProductos() {
             fetch(apiUrl)
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.status === 401 || response.status === 403) {
+                            window.location.href = '/login.html';
+                        }
+                        throw new Error('No se pudo cargar la lista de productos.');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     const list = document.getElementById('product-list');
                     list.innerHTML = '';
@@ -151,7 +284,8 @@
                         `;
                         list.appendChild(row);
                     });
-                });
+                })
+                .catch(error => console.error("Error:", error));
         }
 
         async function cargarProductoEnFormulario(codigo) {
@@ -164,14 +298,20 @@
             document.getElementById('modelo').value = p.modelo;
             document.getElementById('stock').value = p.stock;
             document.getElementById('precio').value = p.precio;
-            // No cargamos el archivo de imagen, el usuario debe seleccionar uno nuevo si desea cambiarlo.
-            window.scrollTo(0, 0); // Lleva la vista al inicio para ver el formulario
+            document.getElementById('imagen-url-original').value = p.imagen_url || '';
+            window.scrollTo(0, 0);
         }
 
         document.getElementById('product-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             const originalCodigo = document.getElementById('codigo-original').value;
             const fileInput = document.getElementById('imagen');
+            const originalImageUrl = document.getElementById('imagen-url-original').value;
+
+            let imageUrlToSend = null;
+            if (originalCodigo && fileInput.files.length === 0) {
+                imageUrlToSend = originalImageUrl;
+            }
 
             const productoData = {
                 codigo: document.getElementById('codigo').value,
@@ -180,45 +320,42 @@
                 modelo: document.getElementById('modelo').value,
                 stock: parseInt(document.getElementById('stock').value),
                 precio: parseInt(document.getElementById('precio').value),
-                imagen_url: null
+                imagen_url: imageUrlToSend
             };
 
             const method = originalCodigo ? 'PUT' : 'POST';
             const url = originalCodigo ? `${apiUrl}/${originalCodigo}` : apiUrl;
 
             try {
-                // Paso 1: Guardar (crear o actualizar) los datos del producto.
                 const response = await fetch(url, {
                     method: method,
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
                     body: JSON.stringify(productoData)
                 });
-
-                if (!response.ok) throw new Error('Error al guardar los datos del producto.');
+                if (!response.ok) throw new Error('Error al guardar los datos.');
                 
                 const savedProduct = await response.json();
                 const productCode = savedProduct.codigo;
 
-                // Paso 2: Si el usuario seleccionó un archivo, subir la imagen.
                 if (fileInput.files.length > 0) {
                     const formData = new FormData();
                     formData.append('file', fileInput.files[0]);
-
                     const imageResponse = await fetch(`${apiUrl}/${productCode}/upload-image/`, {
                         method: 'POST',
+                        headers: { 'Authorization': `Bearer ${accessToken}` },
                         body: formData
                     });
-
-                    if (!imageResponse.ok) throw new Error('Datos del producto guardados, pero falló la subida de la imagen.');
+                    if (!imageResponse.ok) throw new Error('Datos guardados, pero falló la subida de la imagen.');
                 }
 
                 alert('¡Producto guardado con éxito!');
                 document.getElementById('product-form').reset();
                 document.getElementById('codigo-original').value = '';
-                mostrarProductos(); // Recargar la lista
+                document.getElementById('imagen-url-original').value = '';
+                mostrarProductos();
 
             } catch (error) {
-                console.error('Error en el proceso:', error);
+                console.error('Error:', error);
                 alert(error.message);
             }
         });
@@ -227,18 +364,20 @@
             if (!confirm(`¿Estás seguro de que quieres eliminar el producto ${codigo}?`)) {
                 return;
             }
-            fetch(`${apiUrl}/${codigo}`, { method: 'DELETE' })
-                .then(response => {
-                    if (response.ok) {
-                        alert('Producto eliminado.');
-                        mostrarProductos();
-                    } else {
-                        alert('Error al eliminar el producto.');
-                    }
-                });
+            fetch(`${apiUrl}/${codigo}`, { 
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${accessToken}` }
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('Producto eliminado.');
+                    mostrarProductos();
+                } else {
+                    alert('Error al eliminar el producto.');
+                }
+            });
         }
-
-        // Carga inicial de productos
+        
         mostrarProductos();
     </script>
 </body>

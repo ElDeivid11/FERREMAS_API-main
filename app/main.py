@@ -5,7 +5,7 @@ from fastapi.staticfiles import StaticFiles
 
 # Importaciones de la aplicación
 from app.database.db import Base, engine
-from app.routes import productos, contacto, conversion, webpay
+from app.routes import productos, contacto, conversion, webpay, auth
 
 # --- Configuración Inicial ---
 if not os.path.exists("static"):
@@ -31,6 +31,7 @@ app.include_router(productos.router)
 app.include_router(contacto.router)
 app.include_router(conversion.router, prefix="/api")
 app.include_router(webpay.router)
+app.include_router(auth.router)
 
 # Montaje de Directorios Estáticos
 # Esto es solo para que las imágenes (logo y productos) sean accesibles vía URL
