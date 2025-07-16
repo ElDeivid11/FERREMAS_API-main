@@ -7,7 +7,7 @@ Base.metadata.create_all(bind=engine)
 
 db = SessionLocal()
 
-# --- IMPORTANTE: Define aquí tu usuario y contraseña de admin ---
+
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "1234"
 
